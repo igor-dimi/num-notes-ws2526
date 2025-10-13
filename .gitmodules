@@ -1,0 +1,3 @@
+[submodule "code_examples/hdnum"]
+	path = code_examples/hdnum
+	url = https://parcomp-git.iwr.uni-heidelberg.de/Teaching/hdnum.git
