@@ -1,5 +1,38 @@
-# Introduction
+# Intro 
 
-This is a book created from markdown and executable code.
+## HDNum
 
-See @knuth84 for additional discussion of literate programming.
+###  add the hdnum repo as a submodule:
+
+```
+git submodule add https://parcomp-git.iwr.uni-heidelberg.de/Teaching/hdnum.git hdnum
+git commit -m "Add hdnum as submodule"
+git push
+```
+
+### clone a repo that already has submodules
+
+* if you clone for the first time:
+
+```
+git clone --recurse-submodules https://parcomp-git.iwr.uni-heidelberg.de/Teaching/hdnum.git
+```
+
+* if you clone first without recurse
+  
+```
+git clone <your-repo-url>
+cd num-notes-ws25
+git submodule update --init --recursive
+```
+
+### pulling the updaets in the submodules on another machine
+
+```
+git pull
+git submodule update --init --recursive
+```
+
+
+
+
