@@ -6,11 +6,11 @@ book:
   author: "Igor Dimitrov"
   date: "10/10/2025"
   chapters:
-    # - index.qmd
+    - index.qmd
     # - summary.qmd
     # - references.qmd
     - intro.qmd
-    
+
 
 bibliography: references.bib
 
