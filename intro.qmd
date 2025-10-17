@@ -32,6 +32,7 @@ git clone --recurse-submodules https://github.com/igor-dimi/num-sol-ws2526.git
 cd num-sol-ws2526
 
 # Build
+cd src/
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build -j
 
@@ -112,6 +113,7 @@ git fetch origin
 git rebase origin/main        # resolve conflicts if any: edit -> git add -> git rebase --continue
 
 #### sanity check
+cd src/
 cmake --build build -j || { echo "Fix build before merging"; exit 1; }
 
 #### fast-forward main to include your branch
@@ -128,7 +130,7 @@ git fetch origin
 git rebase origin/main        # now 'main' already contains your work
 #### resolve conflicts if any -> git add -> git rebase --continue
 
-cmake --build build -j
+cmake --build build -j # from the src folder
 
 git checkout main
 git merge --ff-only ub1_malte
