@@ -22,5 +22,6 @@ format:
   pdf:
     documentclass: scrreprt
 
+number-depth: 2
 
 

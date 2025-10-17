@@ -1,154 +1,227 @@
 # Intro 
 
-## HDNum
 
-###  add the hdnum repo as a submodule:
+
+## Repo structure and Usage
+
+### Repo Layout
 
 ```
-git submodule add https://parcomp-git.iwr.uni-heidelberg.de/Teaching/hdnum.git hdnum
-git commit -m "Add hdnum as submodule"
+num-sol-ws2526/
+├─ hdnum/               # submodule
+├─ CMakeLists.txt       # builds all src/ubN targets
+├─ src/
+│  ├─ ub1/
+│  │  ├─ CMakeLists.txt
+│  │  └─ ub1_task1.cpp
+│  └─ ub2/
+│     └─ CMakeLists.txt
+├─ theory/
+│  ├─ ub1/
+│  └─ ub2/
+└─ .github/workflows/build.yml
+```
+
+### Teammate onboarding snippet
+
+Send them this:
+
+```bash
+# First-time clone (includes submodule)
+git clone --recurse-submodules https://github.com/igor-dimi/num-sol-ws2526.git
+cd num-sol-ws2526
+
+# Build
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j
+
+# Create your branch for this week
+git checkout -b ub1_<yourname>
+# ...work...
+git commit -am "ub1: your message"
+git push -u origin ub1_<yourname>
+```
+
+### Day-to-day workflow (lightweight)
+
+* **Sync main (everyone):**
+
+  ```bash
+  git checkout main
+  git pull --ff-only
+  git submodule update --init --recursive
+  ```
+
+* **Work on a branch for the week:**
+
+  ```bash
+  git checkout -b ub1_igor
+  # edit src/ub1/... and theory/ub1/...
+  cmake -S . -B build -DCMAKE_BUILD_TYPE=Release   # usually only first time
+  cmake --build build -j                           # build locally
+  git add -A
+  git commit -m "ub1: implement task1; add notes"
+  git push -u origin ub1_igor
+  ```
+
+* **Merge strategy:**
+
+  * If your changes don’t conflict and are small: either **open a PR and self-merge** after CI is green **or** fast-forward/merge to `main` directly.
+  * If you both touched the same files or it’s risky: **open a PR** and ask for a quick review.
+
+> With this setup we **don’t** enable branch protection. CI will still run and show you if `main` breaks, but it won’t block merges.
+
+### Optional niceties (quick wins)
+
+* **Labels**: create `ub1`, `ub2`, … labels; tag issues/PRs by sheet.
+* **CODEOWNERS** (optional):
+  `.github/CODEOWNERS`
+
+  ```
+  /src/ub1/  @igor-dimi @teammate
+  /src/ub2/  @igor-dimi @teammate
+  ```
+
+  (This just auto-requests reviews; it won’t block merges unless you add protection later.)
+* **CI variants**: if you don’t want GMP on CI, drop `libgmp-dev` and keep `HDNUM_USE_GMP=OFF` as default in CMake.
+
+
+### Example Workflow
+
+Two options: 
+
+*  **linear (rebase + fast-forward)** way first (preferred),   
+*  simple **merge commits** way.  
+
+---
+
+#### A) Linear history (rebase each branch onto `main`, then fast-forward)
+
+This avoids “merge bubbles” and keeps history tidy.
+
+##### 1) Merge your branch
+
+```bash
+#### make sure main is up to date
+git checkout main
+git pull --ff-only
+
+#### rebase your branch on top of the latest main
+git checkout ub1_igor
+git fetch origin
+git rebase origin/main        # resolve conflicts if any: edit -> git add -> git rebase --continue
+
+#### sanity check
+cmake --build build -j || { echo "Fix build before merging"; exit 1; }
+
+#### fast-forward main to include your branch
+git checkout main
+git merge --ff-only ub1_igor  # will fail if rebase wasn't done; that's good
 git push
 ```
 
-### clone a repo that already has submodules
+##### 2) Merge your teammate’s branch
 
-* if you clone for the first time:
+```bash
+git checkout ub1_malte
+git fetch origin
+git rebase origin/main        # now 'main' already contains your work
+#### resolve conflicts if any -> git add -> git rebase --continue
 
-```
-git clone --recurse-submodules https://parcomp-git.iwr.uni-heidelberg.de/Teaching/hdnum.git
+cmake --build build -j
+
+git checkout main
+git merge --ff-only ub1_malte
+git push
 ```
 
-* if you clone first without recurse
-  
+> If during the rebase you had already pushed your branch earlier, you’ll need to update it (optional) with:
+>
+> ```
+> git push --force-with-lease
+> ```
+>
+> Use `--force-with-lease` (not plain `--force`) to avoid clobbering a teammate’s work accidentally.
+
+---
+
+#### B) Simple merge commits (no rebases)
+
+This is quickest if you don’t care about a perfectly linear history.
+
+```bash
+git checkout main
+git pull --ff-only
+
+#### merge your branch
+git merge --no-ff ub1_igor    # creates a merge commit even if FF would be possible
+#### or: git merge ub1_igor      # lets Git fast-forward if possible
+cmake --build build -j
+git push
+
+#### merge your teammate's branch
+git merge --no-ff ub1_malte
+#### resolve conflicts if prompted: edit -> git add <files> -> git commit
+cmake --build build -j
+git push
 ```
-git clone <your-repo-url>
-cd num-notes-ws25
+
+---
+
+##### Conflict handling (both methods)
+
+* Git stops and shows `CONFLICT` markers if you happened to touch the same lines.
+* Open the files, keep the correct pieces, then:
+
+  ```
+  git add <fixed-files>
+  # continue the operation:
+  # - during rebase: git rebase --continue
+  # - during merge:  git commit
+  ```
+* Rebuild locally; only push once it compiles.
+
+---
+
+##### Submodule note
+
+If neither branch changed the `hdnum` submodule pointer, nothing special.
+If one did, after merging:
+
+```bash
 git submodule update --init --recursive
 ```
 
-### pulling the updaets in the submodules on another machine
+---
 
-```
-git pull
-git submodule update --init --recursive
-```
+#### Which to choose?
 
-### CMAKE 
-<!-- 
-* `CmakeLists.txt`:
+* **A) Rebase + `--ff-only`**: best if you value a clean, straight history.
+* **B) Merge commits**: fine for a small class repo; fewer commands; history will have merge nodes.
 
-```cmake
-cmake_minimum_required(VERSION 3.16)
-project(hdnum_examples CXX)
-set(CMAKE_CXX_STANDARD 20)
+## CMAKE 
 
-# Put all executables in build/bin
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
-# hdnum include dir (submodule lives at ../hdnum)
-set(HDNUM_DIR "${CMAKE_CURRENT_LIST_DIR}/../hdnum")
-
-# Common interface target for shared config
-add_library(hdnum_common INTERFACE)
-target_include_directories(hdnum_common INTERFACE "${HDNUM_DIR}")
-
-# Optional GMP
-option(HDNUM_USE_GMP "Enable GMP in hdnum" OFF)
-if(HDNUM_USE_GMP)
-  target_compile_definitions(hdnum_common INTERFACE HDNUM_HAS_GMP=1)
-  find_library(GMPXX gmpxx)
-  find_library(GMP   gmp)
-  if(GMPXX AND GMP)
-    target_link_libraries(hdnum_common INTERFACE ${GMPXX} ${GMP})
-  else()
-    message(FATAL_ERROR "GMP not found; set paths or disable HDNUM_USE_GMP")
-  endif()
-endif()
-
-# Chapters — add as you create them
-set(HDNUM_CHAPTERS ch1 ch2 ch3 ch4 ch5 ch6 ch7 ch8 ch9 ch10)
-foreach(ch IN LISTS HDNUM_CHAPTERS)
-  if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/src/${ch}/CMakeLists.txt")
-    add_subdirectory("src/${ch}")
-  endif()
-endforeach()
-```
-
-* configure and generate the build system
-
-```bash
-cmake -S . -B build            # configure/generate into ./build
-```
-
-or with options:
-
-```bash
-cmake -S . -B build -DHDNUM_USE_GMP=ON -DCMAKE_BUILD_TYPE=Release
-```
-
-* build:
-
-```bash
-cmake --build build --config Release
-```
-
-or simply:
-
-```bash
-cmake --build build
-```
-
-* `--config Release` matter for **multi-config generators**, e.g. MSVC, Ninja Multi-Config)
-* On typical Unix Makefiles/Ninja (single-config), it's ignored; instead set `- DCMAKE_BUILD_TYPE=Release` during the **configure** step
-
-i.e.
-
-```bash
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build
-``` -->
-
-#### 1) Repository layout
-
-```
-num-notes-ws25/
-├─ _quarto.yml
-├─ code_examples/
-│  ├─ hdnum/                   # submodule (header-only library)
-│  └─ my_solutions/            # your code
-│     ├─ CMakeLists.txt        # top-level for examples
-│     └─ src/
-│        ├─ ch1/
-│        │  ├─ CMakeLists.txt
-│        │  ├─ ch1_ode_demo.cpp
-│        │  └─ ch1_newton_demo.cpp
-│        ├─ ch2/
-│        │  └─ CMakeLists.txt
-│        └─ ...
-└─ .github/workflows/publish.yml
-```
-
-#### 2) Top-level CMake for examples (`code_examples/my_solutions/CMakeLists.txt`)
+### 2) Top-level CMake for examples (`code_examples/my_solutions/CMakeLists.txt`)
 
 * Defines a shared **INTERFACE** target `hdnum_common` (provides include paths, optional GMP).
 * Adds each chapter as a subdirectory if it exists.
 
 ```cmake
 cmake_minimum_required(VERSION 3.16)
-project(hdnum_examples CXX)
+project(numerics_solutions CXX)
 set(CMAKE_CXX_STANDARD 20)
 
-### (Optional) put all executables under a single bin/ root
+# Put binaries under build/bin/ubX/
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
-### hdnum include dir (submodule)
-set(HDNUM_DIR "${CMAKE_CURRENT_LIST_DIR}/../hdnum")
+# hdnum include dir (submodule at repo root)
+set(HDNUM_DIR "../hdnum")
 
-### Common config shared by all examples
+# Shared interface target with include path (and optional GMP)
 add_library(hdnum_common INTERFACE)
 target_include_directories(hdnum_common INTERFACE "${HDNUM_DIR}")
 
-### Optional: enable GMP support in hdnum
 option(HDNUM_USE_GMP "Enable GMP in hdnum" OFF)
 if(HDNUM_USE_GMP)
   target_compile_definitions(hdnum_common INTERFACE HDNUM_HAS_GMP=1)
@@ -157,80 +230,67 @@ if(HDNUM_USE_GMP)
   if(GMPXX AND GMP)
     target_link_libraries(hdnum_common INTERFACE ${GMPXX} ${GMP})
   else()
-    message(FATAL_ERROR "GMP not found; set paths or disable HDNUM_USE_GMP")
+    message(FATAL_ERROR "GMP not found; install libgmp-dev or disable HDNUM_USE_GMP")
   endif()
 endif()
 
-### Chapters to include (add/remove as needed)
-set(HDNUM_CHAPTERS ch1 ch2 ch3 ch4 ch5 ch6 ch7 ch8 ch9 ch10)
-foreach(ch IN LISTS HDNUM_CHAPTERS)
-  if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/src/${ch}/CMakeLists.txt")
-    add_subdirectory("src/${ch}")
+# Add each UB subdir in src/ if it has a CMakeLists.txt
+foreach(ub IN ITEMS ub1 ub2 ub3 ub4 ub5 ub6 ub7 ub8 ub9 ub10)
+  if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/${ub}/CMakeLists.txt")
+    add_subdirectory("${ub}")
   endif()
 endforeach()
 ```
 
-#### 3) Per-chapter CMake with per-chapter output folders
+### 3) Per UB-folder CMake with per-Ub output folders
 
 * Each chapter decides which executables to build.
 * **Per-chapter runtime output** goes to `build/bin/<chapter>/` (and per-config subfolders on multi-config generators).
 
 ```cmake
-### code_examples/my_solutions/src/ch1/CMakeLists.txt
-set(CHAPTER ch1)
+set(UB ub1)
 
-### Per-chapter output folder
-set(OUT_DIR "${CMAKE_BINARY_DIR}/bin/${CHAPTER}")
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${OUT_DIR}")
+# Group executables per UB on disk (and per-config for multi-config generators)
+set(OUT "${CMAKE_BINARY_DIR}/bin/${UB}")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${OUT}")
 foreach(cfg IN ITEMS Debug Release RelWithDebInfo MinSizeRel)
-  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${cfg} "${OUT_DIR}/${cfg}")
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${cfg} "${OUT}/${cfg}")
 endforeach()
 
-### Helper to add ch1 examples
-function(add_ch_example name)
+function(add_ub_example name)
   add_executable(${name} "${name}.cpp")
   target_link_libraries(${name} PRIVATE hdnum_common)
-  # Optional: group in IDEs
-  set_target_properties(${name} PROPERTIES FOLDER "${CHAPTER}")
+  set_target_properties(${name} PROPERTIES FOLDER "${UB}") # IDE grouping
 endfunction()
 
-### List executables in this chapter
-add_ch_example(ch1_ode_demo)
-add_ch_example(ch1_newton_demo)
+# List ub1 binaries here:
+add_ub_example(ub1_task1)
+add_ub_example(ub1_task2)
 ```
 
-> Repeat a similar `CMakeLists.txt` in `src/ch2`, `src/ch3`, … adding that chapter’s `.cpp` files.
+> Repeat a similar `CMakeLists.txt` in `src/ub02`, `src/ueb03`, … adding that chapter’s `.cpp` files.
 
-#### 4) Build commands (configure once, then build)
+### 4) Build commands (configure once, then build)
 
 **Single-config (Linux/Mint, Makefiles/Ninja):**
 
 ```bash
-cd code_examples/my_solutions
+cd src
 ### configure (once per build dir or when options/CMakeLists change)
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release               # + -DHDNUM_USE_GMP=ON if needed
 ### build (repeat as you edit sources)
 cmake --build build -j
 ```
 
-**Multi-config (MSVC / Ninja Multi-Config):**
-
-```bash
-cmake -S . -B build
-cmake --build build --config Release
-```
-
 **Outputs**
 
 ```
-build/bin/ch1/ch1_ode_demo
-build/bin/ch1/ch1_newton_demo
-build/bin/ch2/...
+build/bin/ub01/ub01_ode_demo
+build/bin/ub01/ub01_newton_demo
+build/bin/ub02/...
 ```
 
-(or `build/bin/ch1/Release/...` on multi-config generators)
-
-#### 5) Using GMP (high precision) without editing submodule
+### 5) Using GMP (high precision) without editing submodule
 
 * Install dev package: `sudo apt install -y libgmp-dev`
 * Enable once at configure time (persists in the build cache):
@@ -249,16 +309,9 @@ build/bin/ch2/...
 > cmake --build build-gmp
 > ```
 
-#### 6) Troubleshooting quickies
+### 6) Troubleshooting quickies
 
 * `fatal error: hdnum.hh: No such file or directory` → `HDNUM_DIR` wrong; ensure submodule is initialized; include path points at the folder that **contains** `hdnum.hh`.
 * `GMP not found` → install `libgmp-dev`; reconfigure; or pass custom `-DCMAKE_LIBRARY_PATH=/path -DCMAKE_INCLUDE_PATH=/path`.
 * Changing `HDNUM_USE_GMP` or editing `CMakeLists.txt` → reconfigure (rerun the `cmake -S . -B build ...` step). Otherwise just `cmake --build build -j`.
-
-
-
-
-
-
-
 
