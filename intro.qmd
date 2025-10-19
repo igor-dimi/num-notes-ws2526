@@ -8,22 +8,23 @@
 
 ```
 num-sol-ws2526/
-├─ hdnum/                         # submodule
-├─ src/                           # CMake "top-level" lives here
-│  ├─ CMakeLists.txt              # builds all ubN targets
+├─ CMakeLists.txt                  # tiny forwarder: just add_subdirectory(src)
+├─ hdnum/                          # submodule (header-only HDNUM library)
+├─ src/                            # build root for all programming exercises
+│  ├─ CMakeLists.txt               # real top-level: sets hdnum include, adds all ubN subdirs
 │  ├─ ub1/
-│  │  ├─ CMakeLists.txt           # defines ub1 targets (e.g. ub1_task1)
+│  │  ├─ CMakeLists.txt            # defines ub1 targets (e.g., ub1_task1), sets bin dir to build/bin/ub1
 │  │  └─ ub1_task1.cpp
 │  ├─ ub2/
-│  │  └─ CMakeLists.txt
+│  │  ├─ CMakeLists.txt            # same pattern for week 2 (easy place to add per-UB flags)
+│  │  └─ ub2_task1.cpp
 │  └─ ...
 ├─ theory/
 │  ├─ ub1/
 │  └─ ub2/
 ├─ .github/workflows/
-│  └─ build.yml                   # CI (set working-directory: src)
+│  └─ build.yml                    # CI: configure with -S . (root) now that we have a forwarder
 └─ .gitignore
-
 ```
 
 ### Teammate onboarding snippet
@@ -36,7 +37,6 @@ git clone --recurse-submodules https://github.com/igor-dimi/num-sol-ws2526.git
 cd num-sol-ws2526
 
 # Build
-cd src/
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build -j
 
@@ -117,7 +117,6 @@ git fetch origin
 git rebase origin/main        # resolve conflicts if any: edit -> git add -> git rebase --continue
 
 #### sanity check
-cd src/
 cmake --build build -j || { echo "Fix build before merging"; exit 1; }
 
 #### fast-forward main to include your branch
@@ -281,7 +280,6 @@ add_ub_example(ub1_task2)
 **Single-config (Linux/Mint, Makefiles/Ninja):**
 
 ```bash
-cd src
 ### configure (once per build dir or when options/CMakeLists change)
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release               # + -DHDNUM_USE_GMP=ON if needed
 ### build (repeat as you edit sources)
