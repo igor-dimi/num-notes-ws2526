@@ -169,7 +169,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#teammate-onboarding-snippet" id="toc-teammate-onboarding-snippet" class="nav-link" data-scroll-target="#teammate-onboarding-snippet">Teammate onboarding snippet</a></li>
   <li><a href="#day-to-day-workflow-lightweight" id="toc-day-to-day-workflow-lightweight" class="nav-link" data-scroll-target="#day-to-day-workflow-lightweight">Day-to-day workflow (lightweight)</a></li>
   <li><a href="#optional-niceties-quick-wins" id="toc-optional-niceties-quick-wins" class="nav-link" data-scroll-target="#optional-niceties-quick-wins">Optional niceties (quick wins)</a></li>
-  <li><a href="#example-workflow" id="toc-example-workflow" class="nav-link" data-scroll-target="#example-workflow">Example Workflow</a></li>
+  <li><a href="#example-workflow-and-git-guide" id="toc-example-workflow-and-git-guide" class="nav-link" data-scroll-target="#example-workflow-and-git-guide">Example Workflow and Git Guide</a></li>
   </ul></li>
   <li><a href="#cmake" id="toc-cmake" class="nav-link" data-scroll-target="#cmake"><span class="header-section-number">1.2</span> CMAKE</a>
   <ul class="collapse">
@@ -178,6 +178,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#build-commands-configure-once-then-build" id="toc-build-commands-configure-once-then-build" class="nav-link" data-scroll-target="#build-commands-configure-once-then-build">4) Build commands (configure once, then build)</a></li>
   <li><a href="#using-gmp-high-precision-without-editing-submodule" id="toc-using-gmp-high-precision-without-editing-submodule" class="nav-link" data-scroll-target="#using-gmp-high-precision-without-editing-submodule">5) Using GMP (high precision) without editing submodule</a></li>
   <li><a href="#troubleshooting-quickies" id="toc-troubleshooting-quickies" class="nav-link" data-scroll-target="#troubleshooting-quickies">6) Troubleshooting quickies</a></li>
+  </ul></li>
+  <li><a href="#commit-guide" id="toc-commit-guide" class="nav-link" data-scroll-target="#commit-guide"><span class="header-section-number">1.3</span> Commit Guide</a>
+  <ul class="collapse">
+  <li><a href="#why-commits-matter-even-in-a-small-class-repo" id="toc-why-commits-matter-even-in-a-small-class-repo" class="nav-link" data-scroll-target="#why-commits-matter-even-in-a-small-class-repo">why commits matter (even in a small class repo)</a></li>
+  <li><a href="#guiding-principles" id="toc-guiding-principles" class="nav-link" data-scroll-target="#guiding-principles">guiding principles</a></li>
+  <li><a href="#commit-message-style" id="toc-commit-message-style" class="nav-link" data-scroll-target="#commit-message-style">commit message style</a></li>
+  <li><a href="#where-to-commit-branches-vs-master" id="toc-where-to-commit-branches-vs-master" class="nav-link" data-scroll-target="#where-to-commit-branches-vs-master">where to commit: branches vs master</a></li>
+  <li><a href="#making-small-corrections-without-clutter" id="toc-making-small-corrections-without-clutter" class="nav-link" data-scroll-target="#making-small-corrections-without-clutter">making small corrections without clutter</a></li>
+  <li><a href="#squashing-commits-make-history-tidy" id="toc-squashing-commits-make-history-tidy" class="nav-link" data-scroll-target="#squashing-commits-make-history-tidy">squashing commits (make history tidy)</a></li>
+  <li><a href="#merging-two-ub-branches-that-touched-different-files" id="toc-merging-two-ub-branches-that-touched-different-files" class="nav-link" data-scroll-target="#merging-two-ub-branches-that-touched-different-files">merging two UB branches that touched different files</a></li>
+  <li><a href="#ci-etiquette-so-you-dont-pay-for-needless-runs" id="toc-ci-etiquette-so-you-dont-pay-for-needless-runs" class="nav-link" data-scroll-target="#ci-etiquette-so-you-dont-pay-for-needless-runs">CI etiquette (so you don’t pay for needless runs)</a></li>
+  <li><a href="#when-to-open-a-pr-vs-pushing-to-master" id="toc-when-to-open-a-pr-vs-pushing-to-master" class="nav-link" data-scroll-target="#when-to-open-a-pr-vs-pushing-to-master">when to open a PR vs pushing to master</a></li>
+  <li><a href="#submodule-gotcha-refresher-hdnum" id="toc-submodule-gotcha-refresher-hdnum" class="nav-link" data-scroll-target="#submodule-gotcha-refresher-hdnum">submodule gotcha refresher (hdnum)</a></li>
+  <li><a href="#safety-net-undo-recover" id="toc-safety-net-undo-recover" class="nav-link" data-scroll-target="#safety-net-undo-recover">safety net: undo &amp; recover</a></li>
+  <li><a href="#small-before-you-merge-to-master-checklist" id="toc-small-before-you-merge-to-master-checklist" class="nav-link" data-scroll-target="#small-before-you-merge-to-master-checklist">small “before you merge to master” checklist</a></li>
+  <li><a href="#tldr" id="toc-tldr" class="nav-link" data-scroll-target="#tldr">tl;dr</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -209,22 +225,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="repo-layout" class="level3">
 <h3 class="anchored" data-anchor-id="repo-layout">Repo Layout</h3>
 <pre><code>num-sol-ws2526/
-├─ hdnum/                         # submodule
-├─ src/                           # CMake "top-level" lives here
-│  ├─ CMakeLists.txt              # builds all ubN targets
+├─ CMakeLists.txt                  # tiny forwarder: just add_subdirectory(src)
+├─ hdnum/                          # submodule (header-only HDNUM library)
+├─ src/                            # build root for all programming exercises
+│  ├─ CMakeLists.txt               # real top-level: sets hdnum include, adds all ubN subdirs
 │  ├─ ub1/
-│  │  ├─ CMakeLists.txt           # defines ub1 targets (e.g. ub1_task1)
+│  │  ├─ CMakeLists.txt            # defines ub1 targets (e.g., ub1_task1), sets bin dir to build/bin/ub1
 │  │  └─ ub1_task1.cpp
 │  ├─ ub2/
-│  │  └─ CMakeLists.txt
+│  │  ├─ CMakeLists.txt            # same pattern for week 2 (easy place to add per-UB flags)
+│  │  └─ ub2_task1.cpp
 │  └─ ...
 ├─ theory/
 │  ├─ ub1/
 │  └─ ub2/
 ├─ .github/workflows/
-│  └─ build.yml                   # CI (set working-directory: src)
-└─ .gitignore
-</code></pre>
+│  └─ build.yml                    # CI: configure with -S . (root) now that we have a forwarder
+└─ .gitignore</code></pre>
 </section>
 <section id="teammate-onboarding-snippet" class="level3">
 <h3 class="anchored" data-anchor-id="teammate-onboarding-snippet">Teammate onboarding snippet</h3>
@@ -234,15 +251,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> num-sol-ws2526</span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Build</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> src/</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> <span class="at">-S</span> . <span class="at">-B</span> build <span class="at">-DCMAKE_BUILD_TYPE</span><span class="op">=</span>Release</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> <span class="at">--build</span> build <span class="at">-j</span></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Create your branch for this week</span></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> checkout <span class="at">-b</span> ub1_<span class="op">&lt;</span>yourname<span class="op">&gt;</span></span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="co"># ...work...</span></span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> commit <span class="at">-am</span> <span class="st">"ub1: your message"</span></span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> push <span class="at">-u</span> origin ub1_<span class="op">&lt;</span>yourname<span class="op">&gt;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> <span class="at">-S</span> . <span class="at">-B</span> build <span class="at">-DCMAKE_BUILD_TYPE</span><span class="op">=</span>Release</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> <span class="at">--build</span> build <span class="at">-j</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Create your branch for this week</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> checkout <span class="at">-b</span> ub1_<span class="op">&lt;</span>yourname<span class="op">&gt;</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co"># ...work...</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> commit <span class="at">-am</span> <span class="st">"ub1: your message"</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> push <span class="at">-u</span> origin ub1_<span class="op">&lt;</span>yourname<span class="op">&gt;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="day-to-day-workflow-lightweight" class="level3">
 <h3 class="anchored" data-anchor-id="day-to-day-workflow-lightweight">Day-to-day workflow (lightweight)</h3>
@@ -280,8 +296,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><p><strong>CI variants</strong>: if you don’t want GMP on CI, drop <code>libgmp-dev</code> and keep <code>HDNUM_USE_GMP=OFF</code> as default in CMake.</p></li>
 </ul>
 </section>
-<section id="example-workflow" class="level3">
-<h3 class="anchored" data-anchor-id="example-workflow">Example Workflow</h3>
+<section id="example-workflow-and-git-guide" class="level3">
+<h3 class="anchored" data-anchor-id="example-workflow-and-git-guide">Example Workflow and Git Guide</h3>
 <p>Two options:</p>
 <ul>
 <li><strong>linear (rebase + fast-forward)</strong> way first (preferred),<br>
@@ -304,13 +320,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> rebase origin/main        <span class="co"># resolve conflicts if any: edit -&gt; git add -&gt; git rebase --continue</span></span>
 <span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="co">#### sanity check</span></span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> src/</span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> <span class="at">--build</span> build <span class="at">-j</span> <span class="kw">||</span> <span class="kw">{</span> <span class="bu">echo</span> <span class="st">"Fix build before merging"</span><span class="kw">;</span> <span class="bu">exit</span> 1<span class="kw">;</span> <span class="kw">}</span></span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="co">#### fast-forward main to include your branch</span></span>
-<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> checkout main</span>
-<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> merge <span class="at">--ff-only</span> ub1_igor  <span class="co"># will fail if rebase wasn't done; that's good</span></span>
-<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> push</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> <span class="at">--build</span> build <span class="at">-j</span> <span class="kw">||</span> <span class="kw">{</span> <span class="bu">echo</span> <span class="st">"Fix build before merging"</span><span class="kw">;</span> <span class="bu">exit</span> 1<span class="kw">;</span> <span class="kw">}</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="co">#### fast-forward main to include your branch</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> checkout main</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> merge <span class="at">--ff-only</span> ub1_igor  <span class="co"># will fail if rebase wasn't done; that's good</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> push</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="merge-your-teammates-branch" class="level5">
 <h5 class="anchored" data-anchor-id="merge-your-teammates-branch">2) Merge your teammate’s branch</h5>
@@ -451,11 +466,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="build-commands-configure-once-then-build" class="level3">
 <h3 class="anchored" data-anchor-id="build-commands-configure-once-then-build">4) Build commands (configure once, then build)</h3>
 <p><strong>Single-config (Linux/Mint, Makefiles/Ninja):</strong></p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> src</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="co">### configure (once per build dir or when options/CMakeLists change)</span></span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> <span class="at">-S</span> . <span class="at">-B</span> build <span class="at">-DCMAKE_BUILD_TYPE</span><span class="op">=</span>Release               <span class="co"># + -DHDNUM_USE_GMP=ON if needed</span></span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="co">### build (repeat as you edit sources)</span></span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> <span class="at">--build</span> build <span class="at">-j</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co">### configure (once per build dir or when options/CMakeLists change)</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> <span class="at">-S</span> . <span class="at">-B</span> build <span class="at">-DCMAKE_BUILD_TYPE</span><span class="op">=</span>Release               <span class="co"># + -DHDNUM_USE_GMP=ON if needed</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="co">### build (repeat as you edit sources)</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> <span class="at">--build</span> build <span class="at">-j</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p><strong>Outputs</strong></p>
 <pre><code>build/bin/ub01/ub01_ode_demo
 build/bin/ub01/ub01_newton_demo
@@ -483,6 +497,292 @@ cmake --build build-gmp</code></pre>
 <li><code>fatal error: hdnum.hh: No such file or directory</code> → <code>HDNUM_DIR</code> wrong; ensure submodule is initialized; include path points at the folder that <strong>contains</strong> <code>hdnum.hh</code>.</li>
 <li><code>GMP not found</code> → install <code>libgmp-dev</code>; reconfigure; or pass custom <code>-DCMAKE_LIBRARY_PATH=/path -DCMAKE_INCLUDE_PATH=/path</code>.</li>
 <li>Changing <code>HDNUM_USE_GMP</code> or editing <code>CMakeLists.txt</code> → reconfigure (rerun the <code>cmake -S . -B build ...</code> step). Otherwise just <code>cmake --build build -j</code>.</li>
+</ul>
+</section>
+</section>
+<section id="commit-guide" class="level2" data-number="1.3">
+<h2 data-number="1.3" class="anchored" data-anchor-id="commit-guide"><span class="header-section-number">1.3</span> Commit Guide</h2>
+<p>here’s a single, self-contained guide you can drop into your notes. it pulls together: clear commit message style, when/where to commit, fixup commits, squashing (locally and via PR), CI considerations, and safety tips.</p>
+<section id="why-commits-matter-even-in-a-small-class-repo" class="level3">
+<h3 class="anchored" data-anchor-id="why-commits-matter-even-in-a-small-class-repo">why commits matter (even in a small class repo)</h3>
+<p>clean commits make it easy for teammates (and future you) to understand what changed and why. your history is your lab notebook: compact, accurate, readable.</p>
+</section>
+<section id="guiding-principles" class="level3">
+<h3 class="anchored" data-anchor-id="guiding-principles">guiding principles</h3>
+<ul>
+<li>commit <strong>often while you work</strong>, but <strong>present a tidy history when you merge</strong>.</li>
+<li>keep <code>master</code>/<code>main</code> always <strong>working</strong>; do experimental work on branches like <code>ub1_igor</code>.</li>
+<li>use CI to sanity-check builds, not to gate every tiny doc tweak.</li>
+<li>write commit messages that explain <strong>why</strong>, not only <strong>what</strong>.</li>
+</ul>
+</section>
+<section id="commit-message-style" class="level3">
+<h3 class="anchored" data-anchor-id="commit-message-style">commit message style</h3>
+<section id="short-template" class="level4">
+<h4 class="anchored" data-anchor-id="short-template">short template</h4>
+<pre><code>&lt;type&gt;(&lt;scope&gt;): &lt;short, imperative summary&gt;
+
+Why:
+- a brief explanation of motivation/context
+- any side effects, constraints, or follow-ups</code></pre>
+<p>Common types: <code>feat</code>, <code>fix</code>, <code>docs</code>, <code>ci</code>, <code>build</code>, <code>refactor</code>, <code>chore</code>, <code>merge</code>.</p>
+</section>
+<section id="examples-tailored-to-your-repo" class="level4">
+<h4 class="anchored" data-anchor-id="examples-tailored-to-your-repo">examples tailored to your repo</h4>
+<pre><code>feat(build): add root CMakeLists forwarder to src/
+
+Why:
+- allows 'cmake -S . -B build' at repo root
+- improves IDE support that expects a top-level CMakeLists</code></pre>
+<pre><code>feat(build): per-UB output dirs under build/bin/ubN/
+
+Why:
+- keeps binaries organized by sheet
+- avoids mixing artifacts across weeks</code></pre>
+<pre><code>feat(build): add hdnum_common interface target
+
+Why:
+- centralizes include path and optional GMP flags
+- reduces repetition across ubN CMakeLists</code></pre>
+<pre><code>fix(build): CI configure uses -S . with root forwarder
+
+Why:
+- matches local build instructions after adding root CMakeLists</code></pre>
+<pre><code>feat(build): add HDNUM_USE_GMP option (default OFF)
+
+Why:
+- enable high precision when libgmp-dev is available
+- keep default lightweight for CI and new clones</code></pre>
+<pre><code>feat(ub1): add ub1_task1 using hdnum::Vector
+
+- minimal example: fill vectors, combine, manual dot product
+- adds per-UB CMakeLists template</code></pre>
+<pre><code>feat(ub2): Newton demo for sqrt(a) with analytic Jacobian
+
+Why:
+- aligns with sheet 2 theory
+- demonstrates hdnum::Newton usage and stopping criteria</code></pre>
+<pre><code>refactor(ub1): extract print_vec helper; tidy includes
+
+Why:
+- remove duplication across ub1 tasks</code></pre>
+<pre><code>fix(ub1): correct A*x multiplication order in minimal example
+
+- y[0] now matches expected result</code></pre>
+<pre><code>docs(ub1): add notes.qmd skeleton; link to code listings
+
+- file-backed blocks include src/ub1/*.cpp</code></pre>
+<pre><code>docs(readme): clarify -S . vs -S src with forwarder example
+
+- add decision tree and CI note</code></pre>
+<pre><code>chore(submodule): add hdnum as submodule at repo root
+
+- pinned to commit abc1234
+- usage: git submodule update --init --recursive</code></pre>
+<pre><code>chore(submodule): bump hdnum to upstream vX.Y (abcdef0)
+
+Why:
+- picks up bugfix in ExplicitEuler step control</code></pre>
+<pre><code>ci: add build workflow on push/PR; fetch submodules
+
+- installs cmake, g++, libgmp-dev
+- configures with -S .</code></pre>
+<pre><code>ci: trigger only on src/** and workflows to reduce noise
+
+Why:
+- avoid rebuilding on docs-only changes</code></pre>
+<pre><code>ci: cancel superseded runs for same branch
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true</code></pre>
+<pre><code>feat(tools): Makefile to copy qmd+sources to Seafile (NR param)
+
+- rsync only newer files for theory/src</code></pre>
+<pre><code>feat(share): Makefile for incremental render+zip in ubN/
+
+- renders only stale PDFs
+- zips PDFs and sources as Heinrich_BlattNN_*.zip</code></pre>
+<pre><code>chore(branch): rename default branch master -&gt; main
+
+- update CI triggers to [ main, master ] for transition</code></pre>
+<pre><code>merge: squash ub1_igor into master (UB1 solutions)
+
+- ExplicitEuler example
+- notes.qmd
+- per-UB CMakeLists</code></pre>
+</section>
+</section>
+<section id="where-to-commit-branches-vs-master" class="level3">
+<h3 class="anchored" data-anchor-id="where-to-commit-branches-vs-master">where to commit: branches vs master</h3>
+<ul>
+<li><strong>on your UB branch</strong> (<code>ub1_igor</code>, <code>ub1_malte</code>): commit as often as you like; small steps are fine.</li>
+<li><strong>on master</strong>: only push <strong>working</strong>, self-contained changes (build locally first). prefer merging/squashing from a branch over committing directly.</li>
+</ul>
+<p>for tiny docs like <code>README.md</code>, direct commits to master are fine—especially if your CI is configured to trigger only on <code>src/**</code>.</p>
+</section>
+<section id="making-small-corrections-without-clutter" class="level3">
+<h3 class="anchored" data-anchor-id="making-small-corrections-without-clutter">making small corrections without clutter</h3>
+<section id="amend-the-last-commit-not-pushed-yet" class="level4">
+<h4 class="anchored" data-anchor-id="amend-the-last-commit-not-pushed-yet">amend the last commit (not pushed yet)</h4>
+<pre><code>git add -A
+git commit --amend</code></pre>
+<p>updates the previous commit in place (no new commit).</p>
+</section>
+<section id="fixup-commits-already-pushed-or-want-to-mark-follow-ups" class="level4">
+<h4 class="anchored" data-anchor-id="fixup-commits-already-pushed-or-want-to-mark-follow-ups">fixup commits (already pushed or want to mark follow-ups)</h4>
+<p>create small “fixup” commits that will be auto-squashed later:</p>
+<pre><code>git commit --fixup &lt;target-commit-sha&gt;
+### later:
+git rebase -i --autosquash origin/master</code></pre>
+<p>configure autosquash by default:</p>
+<pre><code>git config --global rebase.autosquash true</code></pre>
+</section>
+</section>
+<section id="squashing-commits-make-history-tidy" class="level3">
+<h3 class="anchored" data-anchor-id="squashing-commits-make-history-tidy">squashing commits (make history tidy)</h3>
+<section id="fast-one-liner-squash-last-n-commits-into-one" class="level4">
+<h4 class="anchored" data-anchor-id="fast-one-liner-squash-last-n-commits-into-one">fast one-liner: squash last N commits into one</h4>
+<pre><code>git reset --soft HEAD~N
+git commit -m "ub1: final solution and notes"</code></pre>
+<p>use before pushing, or be ready to force-update your branch.</p>
+</section>
+<section id="interactive-rebase-full-control" class="level4">
+<h4 class="anchored" data-anchor-id="interactive-rebase-full-control">interactive rebase (full control)</h4>
+<pre><code>git rebase -i HEAD~N</code></pre>
+<p>change the list to <code>squash</code>/<code>fixup</code> the follow-ups into the first commit, edit the final message, then:</p>
+<pre><code>git push --force-with-lease</code></pre>
+<p>(<code>--force-with-lease</code> prevents clobbering a teammate’s remote work.)</p>
+</section>
+<section id="squash-when-merging-github-ui" class="level4">
+<h4 class="anchored" data-anchor-id="squash-when-merging-github-ui">squash when merging (GitHub UI)</h4>
+<p>open a PR and click <strong>“Squash and merge”</strong>. github creates <strong>one</strong> commit on master containing all your branch changes, regardless of intermediate commits.</p>
+</section>
+<section id="squash-without-a-pr-local" class="level4">
+<h4 class="anchored" data-anchor-id="squash-without-a-pr-local">squash without a PR (local)</h4>
+<pre><code>git checkout master
+git merge --squash ub1_igor
+git commit -m "ub1: solutions"
+git push</code></pre>
+</section>
+</section>
+<section id="merging-two-ub-branches-that-touched-different-files" class="level3">
+<h3 class="anchored" data-anchor-id="merging-two-ub-branches-that-touched-different-files">merging two UB branches that touched different files</h3>
+<p>option A (clean &amp; linear):</p>
+<pre><code>git checkout master
+git pull --ff-only
+
+git checkout ub1_igor
+git rebase origin/master
+cmake --build build -j
+git checkout master
+git merge --ff-only ub1_igor
+git push
+
+git checkout ub1_malte
+git rebase origin/master
+cmake --build build -j
+git checkout master
+git merge --ff-only ub1_malte
+git push</code></pre>
+<p>option B (quicker, allows merge commits):</p>
+<pre><code>git checkout master
+git pull --ff-only
+git merge ub1_igor
+cmake --build build -j
+git push
+
+git merge ub1_malte
+cmake --build build -j
+git push</code></pre>
+</section>
+<section id="ci-etiquette-so-you-dont-pay-for-needless-runs" class="level3">
+<h3 class="anchored" data-anchor-id="ci-etiquette-so-you-dont-pay-for-needless-runs">CI etiquette (so you don’t pay for needless runs)</h3>
+<ul>
+<li>trigger builds only when relevant files change:</li>
+</ul>
+<pre><code>on:
+  push:
+    branches: [ master ]
+    paths:
+      - 'src/**'
+      - '.github/workflows/**'
+  pull_request:
+    branches: [ master ]
+    paths:
+      - 'src/**'
+      - '.github/workflows/**'</code></pre>
+<ul>
+<li>optionally cancel superseded runs if you push multiple times quickly:</li>
+</ul>
+<pre><code>concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true</code></pre>
+<ul>
+<li>for docs-only commits, you can use <code>[skip ci]</code> in the message (sparingly).</li>
+</ul>
+</section>
+<section id="when-to-open-a-pr-vs-pushing-to-master" class="level3">
+<h3 class="anchored" data-anchor-id="when-to-open-a-pr-vs-pushing-to-master">when to open a PR vs pushing to master</h3>
+<ul>
+<li><p>open a <strong>PR</strong> when:</p>
+<ul>
+<li>both of you touched the same files</li>
+<li>the change is risky or large</li>
+<li>you want a quick review (PR = free proofreading + CI view)</li>
+</ul></li>
+<li><p>push or fast-forward merge to <strong>master</strong> when:</p>
+<ul>
+<li>small, low-risk, and you built locally</li>
+<li>docs-only changes</li>
+</ul></li>
+</ul>
+</section>
+<section id="submodule-gotcha-refresher-hdnum" class="level3">
+<h3 class="anchored" data-anchor-id="submodule-gotcha-refresher-hdnum">submodule gotcha refresher (hdnum)</h3>
+<ul>
+<li>after pulling, always align the submodule to the recorded commit:</li>
+</ul>
+<pre><code>git submodule update --init --recursive</code></pre>
+<ul>
+<li>don’t edit <code>hdnum/</code> in place; if you must, fork and repoint the submodule.</li>
+<li>enabling GMP is a <strong>build flag</strong>, not an edit to hdnum:</li>
+</ul>
+<pre><code>cmake -S . -B build -DHDNUM_USE_GMP=ON</code></pre>
+</section>
+<section id="safety-net-undo-recover" class="level3">
+<h3 class="anchored" data-anchor-id="safety-net-undo-recover">safety net: undo &amp; recover</h3>
+<ul>
+<li>view recent HEADs:</li>
+</ul>
+<pre><code>git reflog</code></pre>
+<ul>
+<li>hard reset to a prior state (careful; this rewrites your working tree):</li>
+</ul>
+<pre><code>git reset --hard &lt;reflog-hash-or-commit-sha&gt;</code></pre>
+<ul>
+<li>abort an in-progress rebase or merge:</li>
+</ul>
+<pre><code>git rebase --abort
+git merge --abort</code></pre>
+</section>
+<section id="small-before-you-merge-to-master-checklist" class="level3">
+<h3 class="anchored" data-anchor-id="small-before-you-merge-to-master-checklist">small “before you merge to master” checklist</h3>
+<pre><code>### on your UB branch
+git fetch origin
+git rebase origin/master        # optional but tidy
+cmake --build build -j          # local build passes
+git log --oneline origin/master..HEAD  # commits look meaningful
+### decide: squash locally (rebase -i) or Squash-and-merge via PR</code></pre>
+</section>
+<section id="tldr" class="level3">
+<h3 class="anchored" data-anchor-id="tldr">tl;dr</h3>
+<ul>
+<li>commit freely on branches; <strong>squash</strong> before merging.</li>
+<li>keep master <strong>working</strong>; build locally first; let CI sanity-check.</li>
+<li>write messages that say <strong>why</strong>.</li>
+<li>use <code>--fixup</code> + autosquash for painless cleanup.</li>
+<li>never rewrite shared branch history; <strong>do</strong> rewrite your feature branch history (then <code>--force-with-lease</code>).</li>
 </ul>
 
 
