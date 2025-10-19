@@ -91,7 +91,7 @@ git push -u origin ub1_<yourname>
 * **CI variants**: if you don’t want GMP on CI, drop `libgmp-dev` and keep `HDNUM_USE_GMP=OFF` as default in CMake.
 
 
-### Example Workflow
+### Example Workflow and Git Guide
 
 Two options: 
 
@@ -319,3 +319,379 @@ build/bin/ub02/...
 * `GMP not found` → install `libgmp-dev`; reconfigure; or pass custom `-DCMAKE_LIBRARY_PATH=/path -DCMAKE_INCLUDE_PATH=/path`.
 * Changing `HDNUM_USE_GMP` or editing `CMakeLists.txt` → reconfigure (rerun the `cmake -S . -B build ...` step). Otherwise just `cmake --build build -j`.
 
+## Commit Guide
+
+here’s a single, self-contained guide you can drop into your notes. it pulls together: clear commit message style, when/where to commit, fixup commits, squashing (locally and via PR), CI considerations, and safety tips.
+
+### why commits matter (even in a small class repo)
+
+clean commits make it easy for teammates (and future you) to understand what changed and why. your history is your lab notebook: compact, accurate, readable.
+
+### guiding principles
+
+* commit **often while you work**, but **present a tidy history when you merge**.
+* keep `master`/`main` always **working**; do experimental work on branches like `ub1_igor`.
+* use CI to sanity-check builds, not to gate every tiny doc tweak.
+* write commit messages that explain **why**, not only **what**.
+
+### commit message style
+
+#### short template
+
+```
+<type>(<scope>): <short, imperative summary>
+
+Why:
+- a brief explanation of motivation/context
+- any side effects, constraints, or follow-ups
+```
+
+Common types: `feat`, `fix`, `docs`, `ci`, `build`, `refactor`, `chore`, `merge`.
+
+#### examples tailored to your repo
+
+```
+feat(build): add root CMakeLists forwarder to src/
+
+Why:
+- allows 'cmake -S . -B build' at repo root
+- improves IDE support that expects a top-level CMakeLists
+```
+
+```
+feat(build): per-UB output dirs under build/bin/ubN/
+
+Why:
+- keeps binaries organized by sheet
+- avoids mixing artifacts across weeks
+```
+
+```
+feat(build): add hdnum_common interface target
+
+Why:
+- centralizes include path and optional GMP flags
+- reduces repetition across ubN CMakeLists
+```
+
+```
+fix(build): CI configure uses -S . with root forwarder
+
+Why:
+- matches local build instructions after adding root CMakeLists
+```
+
+```
+feat(build): add HDNUM_USE_GMP option (default OFF)
+
+Why:
+- enable high precision when libgmp-dev is available
+- keep default lightweight for CI and new clones
+```
+
+```
+feat(ub1): add ub1_task1 using hdnum::Vector
+
+- minimal example: fill vectors, combine, manual dot product
+- adds per-UB CMakeLists template
+```
+
+```
+feat(ub2): Newton demo for sqrt(a) with analytic Jacobian
+
+Why:
+- aligns with sheet 2 theory
+- demonstrates hdnum::Newton usage and stopping criteria
+```
+
+```
+refactor(ub1): extract print_vec helper; tidy includes
+
+Why:
+- remove duplication across ub1 tasks
+```
+
+```
+fix(ub1): correct A*x multiplication order in minimal example
+
+- y[0] now matches expected result
+```
+
+```
+docs(ub1): add notes.qmd skeleton; link to code listings
+
+- file-backed blocks include src/ub1/*.cpp
+```
+
+```
+docs(readme): clarify -S . vs -S src with forwarder example
+
+- add decision tree and CI note
+```
+
+```
+chore(submodule): add hdnum as submodule at repo root
+
+- pinned to commit abc1234
+- usage: git submodule update --init --recursive
+```
+
+```
+chore(submodule): bump hdnum to upstream vX.Y (abcdef0)
+
+Why:
+- picks up bugfix in ExplicitEuler step control
+```
+
+```
+ci: add build workflow on push/PR; fetch submodules
+
+- installs cmake, g++, libgmp-dev
+- configures with -S .
+```
+
+```
+ci: trigger only on src/** and workflows to reduce noise
+
+Why:
+- avoid rebuilding on docs-only changes
+```
+
+```
+ci: cancel superseded runs for same branch
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+```
+
+```
+feat(tools): Makefile to copy qmd+sources to Seafile (NR param)
+
+- rsync only newer files for theory/src
+```
+
+```
+feat(share): Makefile for incremental render+zip in ubN/
+
+- renders only stale PDFs
+- zips PDFs and sources as Heinrich_BlattNN_*.zip
+```
+
+```
+chore(branch): rename default branch master -> main
+
+- update CI triggers to [ main, master ] for transition
+```
+
+```
+merge: squash ub1_igor into master (UB1 solutions)
+
+- ExplicitEuler example
+- notes.qmd
+- per-UB CMakeLists
+```
+
+### where to commit: branches vs master
+
+* **on your UB branch** (`ub1_igor`, `ub1_malte`): commit as often as you like; small steps are fine.
+* **on master**: only push **working**, self-contained changes (build locally first). prefer merging/squashing from a branch over committing directly.
+
+for tiny docs like `README.md`, direct commits to master are fine—especially if your CI is configured to trigger only on `src/**`.
+
+### making small corrections without clutter
+
+#### amend the last commit (not pushed yet)
+
+```
+git add -A
+git commit --amend
+```
+
+updates the previous commit in place (no new commit).
+
+#### fixup commits (already pushed or want to mark follow-ups)
+
+create small “fixup” commits that will be auto-squashed later:
+
+```
+git commit --fixup <target-commit-sha>
+### later:
+git rebase -i --autosquash origin/master
+```
+
+configure autosquash by default:
+
+```
+git config --global rebase.autosquash true
+```
+
+### squashing commits (make history tidy)
+
+#### fast one-liner: squash last N commits into one
+
+```
+git reset --soft HEAD~N
+git commit -m "ub1: final solution and notes"
+```
+
+use before pushing, or be ready to force-update your branch.
+
+#### interactive rebase (full control)
+
+```
+git rebase -i HEAD~N
+```
+
+change the list to `squash`/`fixup` the follow-ups into the first commit, edit the final message, then:
+
+```
+git push --force-with-lease
+```
+
+(`--force-with-lease` prevents clobbering a teammate’s remote work.)
+
+#### squash when merging (GitHub UI)
+
+open a PR and click **“Squash and merge”**. github creates **one** commit on master containing all your branch changes, regardless of intermediate commits.
+
+#### squash without a PR (local)
+
+```
+git checkout master
+git merge --squash ub1_igor
+git commit -m "ub1: solutions"
+git push
+```
+
+### merging two UB branches that touched different files
+
+option A (clean & linear):
+
+```
+git checkout master
+git pull --ff-only
+
+git checkout ub1_igor
+git rebase origin/master
+cmake --build build -j
+git checkout master
+git merge --ff-only ub1_igor
+git push
+
+git checkout ub1_malte
+git rebase origin/master
+cmake --build build -j
+git checkout master
+git merge --ff-only ub1_malte
+git push
+```
+
+option B (quicker, allows merge commits):
+
+```
+git checkout master
+git pull --ff-only
+git merge ub1_igor
+cmake --build build -j
+git push
+
+git merge ub1_malte
+cmake --build build -j
+git push
+```
+
+### CI etiquette (so you don’t pay for needless runs)
+
+* trigger builds only when relevant files change:
+
+```
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - 'src/**'
+      - '.github/workflows/**'
+  pull_request:
+    branches: [ master ]
+    paths:
+      - 'src/**'
+      - '.github/workflows/**'
+```
+
+* optionally cancel superseded runs if you push multiple times quickly:
+
+```
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+```
+
+* for docs-only commits, you can use `[skip ci]` in the message (sparingly).
+
+### when to open a PR vs pushing to master
+
+* open a **PR** when:
+
+  * both of you touched the same files
+  * the change is risky or large
+  * you want a quick review (PR = free proofreading + CI view)
+* push or fast-forward merge to **master** when:
+
+  * small, low-risk, and you built locally
+  * docs-only changes
+
+### submodule gotcha refresher (hdnum)
+
+* after pulling, always align the submodule to the recorded commit:
+
+```
+git submodule update --init --recursive
+```
+
+* don’t edit `hdnum/` in place; if you must, fork and repoint the submodule.
+* enabling GMP is a **build flag**, not an edit to hdnum:
+
+```
+cmake -S . -B build -DHDNUM_USE_GMP=ON
+```
+
+### safety net: undo & recover
+
+* view recent HEADs:
+
+```
+git reflog
+```
+
+* hard reset to a prior state (careful; this rewrites your working tree):
+
+```
+git reset --hard <reflog-hash-or-commit-sha>
+```
+
+* abort an in-progress rebase or merge:
+
+```
+git rebase --abort
+git merge --abort
+```
+
+### small “before you merge to master” checklist
+
+```
+### on your UB branch
+git fetch origin
+git rebase origin/master        # optional but tidy
+cmake --build build -j          # local build passes
+git log --oneline origin/master..HEAD  # commits look meaningful
+### decide: squash locally (rebase -i) or Squash-and-merge via PR
+```
+
+### tl;dr
+
+* commit freely on branches; **squash** before merging.
+* keep master **working**; build locally first; let CI sanity-check.
+* write messages that say **why**.
+* use `--fixup` + autosquash for painless cleanup.
+* never rewrite shared branch history; **do** rewrite your feature branch history (then `--force-with-lease`).
