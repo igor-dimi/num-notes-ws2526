@@ -209,18 +209,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="repo-layout" class="level3">
 <h3 class="anchored" data-anchor-id="repo-layout">Repo Layout</h3>
 <pre><code>num-sol-ws2526/
-├─ hdnum/               # submodule
-├─ CMakeLists.txt       # builds all src/ubN targets
-├─ src/
+├─ hdnum/                         # submodule
+├─ src/                           # CMake "top-level" lives here
+│  ├─ CMakeLists.txt              # builds all ubN targets
 │  ├─ ub1/
-│  │  ├─ CMakeLists.txt
+│  │  ├─ CMakeLists.txt           # defines ub1 targets (e.g. ub1_task1)
 │  │  └─ ub1_task1.cpp
-│  └─ ub2/
-│     └─ CMakeLists.txt
+│  ├─ ub2/
+│  │  └─ CMakeLists.txt
+│  └─ ...
 ├─ theory/
 │  ├─ ub1/
 │  └─ ub2/
-└─ .github/workflows/build.yml</code></pre>
+├─ .github/workflows/
+│  └─ build.yml                   # CI (set working-directory: src)
+└─ .gitignore
+</code></pre>
 </section>
 <section id="teammate-onboarding-snippet" class="level3">
 <h3 class="anchored" data-anchor-id="teammate-onboarding-snippet">Teammate onboarding snippet</h3>
